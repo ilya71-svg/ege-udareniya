@@ -1,1 +1,432 @@
-# ege-udareniya
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ЕГЭ — Задание 4 (Ударения)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #f5f5f7;
+    color: #111;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0d0d0d; color: #f5f5f7; }
+    .ege-card, .ege-word-box, .ege-dict-item, .ege-mistake-item, .ege-stat-box, .ege-search, .ege-filter, .ege-btn { background: #1a1a1a; border-color: #333; color: #f5f5f7; }
+    .ege-search::placeholder { color: #666; }
+    .ege-card-desc, .ege-dict-cat, .ege-mistake-count, .ege-result-label, .ege-progress-text, .ege-empty-state, .ege-dict-empty { color: #888; }
+    .ege-category-tag, .ege-stat-box .lbl { background: #222; color: #888; }
+    .ege-back:hover, .ege-card:hover, .ege-dict-item:hover, .ege-filter:hover { background: #222; }
+  }
+  .ege-app { max-width: 520px; margin: 0 auto; padding: 16px; min-height: 100vh; }
+  .ege-app button, .ege-app input { font: inherit; }
+  .ege-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 8px; }
+  .ege-header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0; flex: 1; text-align: center; }
+  .ege-back { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 8px; transition: background .15s; white-space: nowrap; }
+  .ege-back:hover { background: rgba(0,0,0,0.05); }
+  .ege-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ege-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 14px; padding: 22px 16px; text-align: center; cursor: pointer; transition: all .15s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .ege-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #111; }
+  .ege-card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
+  .ege-card-icon.train { background: #e8f5e9; color: #2e7d32; }
+  .ege-card-icon.test { background: #e3f2fd; color: #1565c0; }
+  .ege-card-icon.dict { background: #f3e5f5; color: #6a1b9a; }
+  .ege-card-icon.stat { background: #fce4ec; color: #c62828; }
+  .ege-card-title { font-size: 15px; font-weight: 600; }
+  .ege-card-desc { font-size: 12px; color: #888; line-height: 1.4; }
+  .ege-word-box { background: #fff; border-radius: 14px; padding: 36px 20px; text-align: center; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+  .ege-word { font-size: 34px; font-weight: 600; line-height: 1.4; letter-spacing: 0.02em; display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
+  .ege-char { display: inline-block; padding: 3px 5px; border-radius: 8px; transition: all .15s; cursor: default; min-width: 22px; text-align: center; }
+  .ege-char.vowel { cursor: pointer; border: 2px solid transparent; }
+  .ege-char.vowel:hover { background: #f0f0f0; border-color: #ccc; }
+  @media (prefers-color-scheme: dark) { .ege-char.vowel:hover { background: #222; border-color: #444; } }
+  .ege-char.vowel.selected { background: #111; color: #fff; border-color: #111; }
+  .ege-char.vowel.correct { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+  .ege-char.vowel.wrong { background: #c62828; color: #fff; border-color: #c62828; }
+  .ege-char.vowel.dim { opacity: 0.25; }
+  .ege-category-tag { display: inline-block; font-size: 11px; color: #888; background: #f0f0f0; padding: 4px 12px; border-radius: 6px; margin-top: 14px; font-weight: 500; }
+  .ege-feedback { text-align: center; padding: 14px; border-radius: 12px; margin-bottom: 16px; font-size: 15px; font-weight: 600; opacity: 0; transform: translateY(-4px); transition: all .25s; }
+  .ege-feedback.show { opacity: 1; transform: translateY(0); }
+  .ege-feedback.ok { background: #e8f5e9; color: #2e7d32; }
+  .ege-feedback.err { background: #ffebee; color: #c62828; }
+  @media (prefers-color-scheme: dark) { .ege-feedback.ok { background: rgba(46,125,50,0.15); } .ege-feedback.err { background: rgba(198,40,40,0.15); } }
+  .ege-btn { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; color: #111; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; margin-bottom: 8px; }
+  .ege-btn:hover { background: #f5f5f5; }
+  .ege-btn.primary { background: #111; color: #fff; border-color: #111; }
+  .ege-btn.primary:hover { opacity: 0.85; }
+  .ege-progress-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .ege-progress-bar { flex: 1; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; }
+  .ege-progress-fill { height: 100%; background: #111; border-radius: 3px; transition: width .3s; }
+  .ege-progress-text { font-size: 12px; color: #888; font-variant-numeric: tabular-nums; min-width: 40px; text-align: right; font-weight: 500; }
+  .ege-result { text-align: center; padding: 32px 20px; }
+  .ege-result-score { font-size: 56px; font-weight: 700; line-height: 1; margin-bottom: 8px; }
+  .ege-result-label { font-size: 15px; color: #888; margin-bottom: 28px; }
+  .ege-result-detail { display: flex; justify-content: center; gap: 32px; margin-bottom: 28px; }
+  .ege-result-item { text-align: center; }
+  .ege-result-item .num { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ege-result-item .lbl { font-size: 12px; color: #888; margin-top: 4px; }
+  .ege-search { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; color: #111; font-size: 15px; margin-bottom: 12px; outline: none; }
+  .ege-search:focus { border-color: #111; }
+  .ege-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .ege-filter { padding: 6px 14px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; color: #666; font-size: 12px; cursor: pointer; transition: all .15s; font-weight: 500; }
+  .ege-filter:hover { border-color: #111; color: #111; }
+  .ege-filter.active { background: #111; color: #fff; border-color: #111; }
+  .ege-dict-list { display: flex; flex-direction: column; gap: 6px; max-height: 480px; overflow-y: auto; padding-right: 4px; }
+  .ege-dict-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; transition: background .15s; }
+  .ege-dict-item:hover { background: #f9f9f9; }
+  .ege-dict-word { font-size: 17px; font-weight: 600; }
+  .ege-dict-word .stress { color: #c62828; font-weight: 700; }
+  .ege-dict-cat { font-size: 11px; color: #888; background: #f0f0f0; padding: 3px 10px; border-radius: 6px; font-weight: 500; }
+  .ege-dict-empty, .ege-empty-state { text-align: center; padding: 48px 20px; color: #888; font-size: 14px; }
+  .ege-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .ege-stat-box { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 18px; text-align: center; }
+  .ege-stat-box .val { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .ege-stat-box .lbl { font-size: 12px; color: #888; margin-top: 4px; font-weight: 500; }
+  .ege-mistakes-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; margin-top: 4px; }
+  .ege-mistake-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; margin-bottom: 6px; }
+  .ege-mistake-word { font-size: 16px; font-weight: 500; }
+  .ege-mistake-count { font-size: 12px; color: #c62828; background: #ffebee; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (prefers-color-scheme: dark) { .ege-mistake-count { background: rgba(198,40,40,0.15); } }
+  .ege-screen { display: none; animation: fadeIn .25s ease-out; }
+  .ege-screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .ege-dict-list::-webkit-scrollbar { width: 4px; }
+  .ege-dict-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+  @media (prefers-color-scheme: dark) { .ege-dict-list::-webkit-scrollbar-thumb { background: #444; } }
+</style>
+</head>
+<body>
+
+<div class="ege-app" id="egeApp">
+  <!-- HOME -->
+  <div class="ege-screen active" id="screenHome">
+    <div class="ege-header"><h1>ЕГЭ — Задание 4</h1></div>
+    <p style="font-size:14px;color:#888;margin-bottom:20px;line-height:1.5;">
+      Ударения по орфоэпическому словарю ФИПИ. 190 слов для подготовки.
+    </p>
+    <div class="ege-grid">
+      <div class="ege-card" onclick="goTrain()">
+        <div class="ege-card-icon train">Т</div>
+        <div class="ege-card-title">Тренировка</div>
+        <div class="ege-card-desc">Учись на ошибках в своём темпе</div>
+      </div>
+      <div class="ege-card" onclick="goTest()">
+        <div class="ege-card-icon test">Э</div>
+        <div class="ege-card-title">Экзамен</div>
+        <div class="ege-card-desc">10 слов — проверь себя</div>
+      </div>
+      <div class="ege-card" onclick="goDict()">
+        <div class="ege-card-icon dict">С</div>
+        <div class="ege-card-title">Словарь</div>
+        <div class="ege-card-desc">Все слова с ударениями</div>
+      </div>
+      <div class="ege-card" onclick="goStats()">
+        <div class="ege-card-icon stat">С</div>
+        <div class="ege-card-title">Статистика</div>
+        <div class="ege-card-desc">Прогресс и ошибки</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAINING -->
+  <div class="ege-screen" id="screenTrain">
+    <div class="ege-header">
+      <button class="ege-back" onclick="goHome()">← Назад</button>
+      <h1>Тренировка</h1>
+      <span style="width:60px"></span>
+    </div>
+    <div class="ege-progress-wrap">
+      <div class="ege-progress-bar"><div class="ege-progress-fill" id="trainProgress" style="width:0%"></div></div>
+      <span class="ege-progress-text" id="trainCounter">0/0</span>
+    </div>
+    <div class="ege-word-box">
+      <div class="ege-word" id="trainWord"></div>
+      <div class="ege-category-tag" id="trainCat"></div>
+    </div>
+    <div class="ege-feedback" id="trainFeedback"></div>
+    <div id="trainControls">
+      <button class="ege-btn primary" id="trainNextBtn" onclick="nextTrain()" style="display:none">Следующее слово</button>
+    </div>
+  </div>
+
+  <!-- TEST -->
+  <div class="ege-screen" id="screenTest">
+    <div class="ege-header">
+      <button class="ege-back" onclick="goHome()">← Назад</button>
+      <h1>Экзамен</h1>
+      <span style="width:60px"></span>
+    </div>
+    <div class="ege-progress-wrap">
+      <div class="ege-progress-bar"><div class="ege-progress-fill" id="testProgress" style="width:0%"></div></div>
+      <span class="ege-progress-text" id="testCounter">1/10</span>
+    </div>
+    <div class="ege-word-box">
+      <div class="ege-word" id="testWord"></div>
+      <div class="ege-category-tag" id="testCat"></div>
+    </div>
+    <div class="ege-feedback" id="testFeedback"></div>
+    <div id="testControls">
+      <button class="ege-btn primary" id="testNextBtn" onclick="nextTest()" style="display:none">Далее</button>
+    </div>
+  </div>
+
+  <!-- TEST RESULT -->
+  <div class="ege-screen" id="screenResult">
+    <div class="ege-header">
+      <button class="ege-back" onclick="goHome()">← На главную</button>
+      <h1>Результат</h1>
+      <span style="width:60px"></span>
+    </div>
+    <div class="ege-result">
+      <div class="ege-result-score" id="resultScore">0</div>
+      <div class="ege-result-label">баллов из 10</div>
+      <div class="ege-result-detail">
+        <div class="ege-result-item"><div class="num" id="resultCorrect" style="color:#2e7d32">0</div><div class="lbl">правильно</div></div>
+        <div class="ege-result-item"><div class="num" id="resultWrong" style="color:#c62828">0</div><div class="lbl">ошибок</div></div>
+      </div>
+      <button class="ege-btn primary" onclick="goTest()">Пройти ещё раз</button>
+      <button class="ege-btn" onclick="goHome()">На главную</button>
+    </div>
+  </div>
+
+  <!-- DICTIONARY -->
+  <div class="ege-screen" id="screenDict">
+    <div class="ege-header">
+      <button class="ege-back" onclick="goHome()">← Назад</button>
+      <h1>Словарь</h1>
+      <span style="width:60px"></span>
+    </div>
+    <input class="ege-search" id="dictSearch" placeholder="Поиск слова..." oninput="renderDict()">
+    <div class="ege-filters" id="dictFilters"></div>
+    <div class="ege-dict-list" id="dictList"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="ege-screen" id="screenStats">
+    <div class="ege-header">
+      <button class="ege-back" onclick="goHome()">← Назад</button>
+      <h1>Статистика</h1>
+      <span style="width:60px"></span>
+    </div>
+    <div class="ege-stat-grid">
+      <div class="ege-stat-box"><div class="val" id="statTotal">0</div><div class="lbl">всего ответов</div></div>
+      <div class="ege-stat-box"><div class="val" id="statCorrect">0</div><div class="lbl">правильно</div></div>
+      <div class="ege-stat-box"><div class="val" id="statAccuracy">0%</div><div class="lbl">точность</div></div>
+      <div class="ege-stat-box"><div class="val" id="statTests">0</div><div class="lbl">экзаменов</div></div>
+    </div>
+    <div class="ege-mistakes-title">Слова с ошибками</div>
+    <div id="mistakesList"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const wordsData = [{"word":"аэропОрты","clean":"аэропорты","stress":5,"vowels":[0,1,3,5,8],"category":"существительные"},{"word":"бАнты","clean":"банты","stress":1,"vowels":[1,4],"category":"существительные"},{"word":"бОроду","clean":"бороду","stress":1,"vowels":[1,3,5],"category":"существительные"},{"word":"бухгАлтеров","clean":"бухгалтеров","stress":4,"vowels":[1,4,7,9],"category":"существительные"},{"word":"вероисповЕдание","clean":"вероисповедание","stress":9,"vowels":[1,3,4,7,9,11,13,14],"category":"существительные"},{"word":"водопровОд","clean":"водопровод","stress":7,"vowels":[1,3,5,7],"category":"существительные"},{"word":"газопровОд","clean":"газопровод","stress":7,"vowels":[1,3,5,7],"category":"существительные"},{"word":"граждАнство","clean":"гражданство","stress":5,"vowels":[1,3,5,8],"category":"существительные"},{"word":"дефИс","clean":"дефис","stress":3,"vowels":[1,3],"category":"существительные"},{"word":"дешевИзна","clean":"дешевизна","stress":5,"vowels":[1,3,5,7],"category":"существительные"},{"word":"диспансЕр","clean":"диспансер","stress":6,"vowels":[1,3,5,6,8],"category":"существительные"},{"word":"договорЁнность","clean":"договоренность","stress":6,"vowels":[1,3,5,6,8,11,13],"category":"существительные"},{"word":"докумЕнт","clean":"документ","stress":5,"vowels":[1,3,5,7],"category":"существительные"},{"word":"досУг","clean":"досуг","stress":3,"vowels":[1,3],"category":"существительные"},{"word":"еретИк","clean":"еретик","stress":4,"vowels":[1,3,4,6],"category":"существительные"},{"word":"жалюзИ","clean":"жалюзи","stress":5,"vowels":[1,5],"category":"существительные"},{"word":"знАчимость","clean":"значимость","stress":2,"vowels":[1,2,5,8],"category":"существительные"},{"word":"Иксы","clean":"иксы","stress":0,"vowels":[0,3],"category":"существительные"},{"word":"каталОг","clean":"каталог","stress":5,"vowels":[1,3,5,6],"category":"существительные"},{"word":"квартАл","clean":"квартал","stress":5,"vowels":[1,3,5,6],"category":"существительные"},{"word":"киломЕтр","clean":"километр","stress":5,"vowels":[1,3,5,7],"category":"существительные"},{"word":"кОнусов","clean":"конусов","stress":1,"vowels":[1,3,5,7],"category":"существительные"},{"word":"корЫсть","clean":"корысть","stress":3,"vowels":[1,3,6],"category":"существительные"},{"word":"крАны","clean":"краны","stress":2,"vowels":[1,2,4],"category":"существительные"},{"word":"кремЕнь","clean":"кремень","stress":4,"vowels":[1,3,4,6],"category":"существительные"},{"word":"лЕкторов","clean":"лекторов","stress":1,"vowels":[1,3,5,7],"category":"существительные"},{"word":"лОктя","clean":"локтя","stress":1,"vowels":[1,3],"category":"существительные"},{"word":"локтЕй","clean":"локтей","stress":3,"vowels":[1,3,5],"category":"существительные"},{"word":"лыжнЯ","clean":"лыжня","stress":4,"vowels":[1,4],"category":"существительные"},{"word":"мЕстностей","clean":"местностей","stress":1,"vowels":[1,4,6,8],"category":"существительные"},{"word":"намЕрение","clean":"намерение","stress":3,"vowels":[1,3,5,7,9],"category":"существительные"},{"word":"нарОст","clean":"нарост","stress":3,"vowels":[1,3,5],"category":"существительные"},{"word":"нЕдруг","clean":"недруг","stress":1,"vowels":[1,3,5],"category":"существительные"},{"word":"недУг","clean":"недуг","stress":3,"vowels":[1,3],"category":"существительные"},{"word":"некролОг","clean":"некролог","stress":5,"vowels":[1,3,5,6],"category":"существительные"},{"word":"нЕнависть","clean":"ненависть","stress":1,"vowels":[1,3,5,8],"category":"существительные"},{"word":"нефтепровОд","clean":"нефтепровод","stress":8,"vowels":[1,3,5,8],"category":"существительные"},{"word":"новостЕй","clean":"новостей","stress":5,"vowels":[1,3,5,7],"category":"существительные"},{"word":"нОгтя","clean":"ногтя","stress":1,"vowels":[1,3],"category":"существительные"},{"word":"ногтЕй","clean":"ногтей","stress":3,"vowels":[1,3,5],"category":"существительные"},{"word":"Отзыв","clean":"отзыв","stress":0,"vowels":[0,3],"category":"существительные"},{"word":"отзЫв","clean":"отзыв","stress":3,"vowels":[0,3],"category":"существительные"},{"word":"Отрочество","clean":"отрочество","stress":0,"vowels":[0,3,5,8],"category":"существительные"},{"word":"партЕр","clean":"партер","stress":4,"vowels":[1,3,4,5],"category":"существительные"},{"word":"портфЕль","clean":"портфель","stress":5,"vowels":[1,3,5,7],"category":"существительные"},{"word":"пОручни","clean":"поручни","stress":1,"vowels":[1,3,5,7],"category":"существительные"},{"word":"придАное","clean":"приданое","stress":4,"vowels":[1,3,4,6,8],"category":"существительные"},{"word":"призЫв","clean":"призыв","stress":4,"vowels":[1,3,4,6],"category":"существительные"},{"word":"свЁкла","clean":"свёкла","stress":2,"vowels":[1,2,4],"category":"существительные"},{"word":"сирОты","clean":"сироты","stress":3,"vowels":[1,3,5],"category":"существительные"},{"word":"созЫв","clean":"созыв","stress":3,"vowels":[1,3,4],"category":"существительные"},{"word":"сосредотОчение","clean":"сосредоточение","stress":7,"vowels":[1,3,5,7,9,11,13],"category":"существительные"},{"word":"срЕдства","clean":"средства","stress":2,"vowels":[1,2,5,7],"category":"существительные"},{"word":"стАтуя","clean":"статуя","stress":2,"vowels":[1,2,4,6],"category":"существительные"},{"word":"столЯр","clean":"столяр","stress":4,"vowels":[1,3,4,5],"category":"существительные"},{"word":"тамОжня","clean":"таможня","stress":3,"vowels":[1,3,5,6],"category":"существительные"},{"word":"тОрты","clean":"торты","stress":1,"vowels":[1,4],"category":"существительные"},{"word":"тУфля","clean":"туфля","stress":1,"vowels":[1,4],"category":"существительные"},{"word":"цемЕнт","clean":"цемент","stress":3,"vowels":[1,3,5],"category":"существительные"},{"word":"цЕнтнер","clean":"центнер","stress":1,"vowels":[1,4,6],"category":"существительные"},{"word":"цепОчка","clean":"цепочка","stress":3,"vowels":[1,3,5],"category":"существительные"},{"word":"шАрфы","clean":"шарфы","stress":1,"vowels":[1,4],"category":"существительные"},{"word":"шофЁр","clean":"шофёр","stress":3,"vowels":[1,3,4],"category":"существительные"},{"word":"экспЕрт","clean":"эксперт","stress":4,"vowels":[1,3,4,6],"category":"существительные"},{"word":"знАчимый","clean":"значимый","stress":2,"vowels":[1,2,5,7],"category":"прилагательные"},{"word":"кУхонный","clean":"кухонный","stress":1,"vowels":[1,3,5,7],"category":"прилагательные"},{"word":"слИвовый","clean":"сливовый","stress":2,"vowels":[1,2,4,6],"category":"прилагательные"},{"word":"вернА","clean":"верна","stress":4,"vowels":[1,3,4],"category":"прилагательные"},{"word":"красИвее","clean":"красивее","stress":4,"vowels":[1,3,4,6,8],"category":"прилагательные"},{"word":"красИвейший","clean":"красивейший","stress":4,"vowels":[1,3,4,6,8,10],"category":"прилагательные"},{"word":"ловкА","clean":"ловка","stress":4,"vowels":[1,3,4],"category":"прилагательные"},{"word":"оптОвый","clean":"оптовый","stress":3,"vowels":[1,3,5,6],"category":"прилагательные"},{"word":"мозаИчный","clean":"мозаичный","stress":4,"vowels":[1,3,4,6,8],"category":"прилагательные"},{"word":"прозорлИвый","clean":"прозорливый","stress":6,"vowels":[1,3,5,6,8,10],"category":"прилагательные"},{"word":"прозорлИва","clean":"прозорлива","stress":6,"vowels":[1,3,5,6,8,10],"category":"прилагательные"},{"word":"смазлИва","clean":"смазлива","stress":5,"vowels":[1,3,5,7],"category":"прилагательные"},{"word":"суетлИва","clean":"суетлива","stress":5,"vowels":[1,3,5,7],"category":"прилагательные"},{"word":"болтлИва","clean":"болтлива","stress":5,"vowels":[1,3,5,7],"category":"прилагательные"},{"word":"воспринЯть","clean":"воспринять","stress":6,"vowels":[1,3,5,6,8],"category":"глаголы"},{"word":"понЯть","clean":"понять","stress":3,"vowels":[1,3,5],"category":"глаголы"},{"word":"запломбировАть","clean":"запломбировать","stress":10,"vowels":[1,3,5,7,8,10,12],"category":"глаголы"},{"word":"дозИровать","clean":"дозировать","stress":3,"vowels":[1,3,5,7,9],"category":"глаголы"},{"word":"чЕрпать","clean":"черпать","stress":1,"vowels":[1,3,5],"category":"глаголы"},{"word":"щЁлкать","clean":"щёлкать","stress":1,"vowels":[1,3,5],"category":"глаголы"},{"word":"кАшлянуть","clean":"кашлянуть","stress":1,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"кровоточИть","clean":"кровоточить","stress":7,"vowels":[1,3,5,7,9],"category":"глаголы"},{"word":"облегчИть","clean":"облегчить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"ободрИть","clean":"ободрить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"обострИть","clean":"обострить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"одолжИть","clean":"одолжить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"плодоносИть","clean":"плодоносить","stress":7,"vowels":[1,3,5,7,9],"category":"глаголы"},{"word":"положИть","clean":"положить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"углубИть","clean":"углубить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"озлОбить","clean":"озлобить","stress":3,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"оклЕить","clean":"оклеить","stress":3,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"опОшлить","clean":"опошлить","stress":2,"vowels":[1,2,5,7],"category":"глаголы"},{"word":"освЕдомиться","clean":"осведомиться","stress":3,"vowels":[1,3,5,7,9,11],"category":"глаголы"},{"word":"откУпорить","clean":"откупорить","stress":3,"vowels":[1,3,5,7,9],"category":"глаголы"},{"word":"начАть","clean":"начать","stress":3,"vowels":[1,3,5],"category":"глаголы"},{"word":"прибЫть","clean":"прибыть","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"принЯть","clean":"принять","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"занЯть","clean":"занять","stress":3,"vowels":[1,3,5],"category":"глаголы"},{"word":"включИть","clean":"включить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"сверлИть","clean":"сверлить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"вручИть","clean":"вручить","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"формировАть","clean":"формировать","stress":7,"vowels":[1,3,5,7,9,11],"category":"глаголы"},{"word":"сортировАть","clean":"сортировать","stress":7,"vowels":[1,3,5,7,9,11],"category":"глаголы"},{"word":"премировАть","clean":"премировать","stress":7,"vowels":[1,3,5,7,9,11],"category":"глаголы"},{"word":"бралА","clean":"брала","stress":4,"vowels":[1,3,4],"category":"глаголы"},{"word":"взялА","clean":"взяла","stress":4,"vowels":[1,3,4],"category":"глаголы"},{"word":"гналА","clean":"гнала","stress":4,"vowels":[1,3,4],"category":"глаголы"},{"word":"ждалА","clean":"ждала","stress":4,"vowels":[1,3,4],"category":"глаголы"},{"word":"звалА","clean":"звала","stress":4,"vowels":[1,3,4],"category":"глаголы"},{"word":"клАла","clean":"клала","stress":2,"vowels":[1,2,4],"category":"глаголы"},{"word":"крАлась","clean":"кралась","stress":2,"vowels":[1,2,4,6],"category":"глаголы"},{"word":"лгалА","clean":"лгала","stress":4,"vowels":[1,3,4],"category":"глаголы"},{"word":"лилА","clean":"лила","stress":3,"vowels":[1,3,4],"category":"глаголы"},{"word":"понялА","clean":"поняла","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"послАла","clean":"послала","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"снялА","clean":"сняла","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"создалА","clean":"создала","stress":5,"vowels":[1,3,5,6],"category":"глаголы"},{"word":"занялА","clean":"заняла","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"принялА","clean":"приняла","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"началА","clean":"начала","stress":5,"vowels":[1,3,5,6],"category":"глаголы"},{"word":"дождалАсь","clean":"дождалась","stress":5,"vowels":[1,3,5,6,8],"category":"глаголы"},{"word":"добралАсь","clean":"добралась","stress":5,"vowels":[1,3,5,6,8],"category":"глаголы"},{"word":"обогналА","clean":"обогнала","stress":5,"vowels":[1,3,5,6,8],"category":"глаголы"},{"word":"отдалА","clean":"отдала","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"вручИт","clean":"вручит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"защемИт","clean":"защемит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"звонИт","clean":"звонит","stress":4,"vowels":[1,3,4,6],"category":"глаголы"},{"word":"облегчИт","clean":"облегчит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"ободрИт","clean":"ободрит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"одолжИт","clean":"одолжит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"окружИт","clean":"окружит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"повторИт","clean":"повторит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"сверлИт","clean":"сверлит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"сорИт","clean":"сорит","stress":3,"vowels":[1,3,5],"category":"глаголы"},{"word":"укрепИт","clean":"укрепит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"освЕдомится","clean":"осведомится","stress":3,"vowels":[1,3,5,7,9,11],"category":"глаголы"},{"word":"дозвонИтся","clean":"дозвонится","stress":5,"vowels":[1,3,5,7,9,11],"category":"глаголы"},{"word":"обзвонИт","clean":"обзвонит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"перезвонИт","clean":"перезвонит","stress":7,"vowels":[1,3,5,7,9],"category":"глаголы"},{"word":"позвонИт","clean":"позвонит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"накренИтся","clean":"накренится","stress":5,"vowels":[1,3,5,7,9,11],"category":"глаголы"},{"word":"наделИт","clean":"наделит","stress":5,"vowels":[1,3,5,7],"category":"глаголы"},{"word":"зАнятый","clean":"занятый","stress":1,"vowels":[1,3,5,7],"category":"причастия"},{"word":"прИнятый","clean":"принятый","stress":2,"vowels":[1,2,4,6,8],"category":"причастия"},{"word":"снЯтый","clean":"снятый","stress":2,"vowels":[1,2,4,6],"category":"причастия"},{"word":"заселЁнный","clean":"заселенный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"зАгнутый","clean":"загнутый","stress":1,"vowels":[1,3,5,7],"category":"причастия"},{"word":"зАпертый","clean":"запертый","stress":1,"vowels":[1,3,5,7],"category":"причастия"},{"word":"нАчатый","clean":"начатый","stress":1,"vowels":[1,3,5,7],"category":"причастия"},{"word":"сОгнутый","clean":"согнутый","stress":1,"vowels":[1,3,5,7],"category":"причастия"},{"word":"довезЁнный","clean":"довезенный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"облегчЁнный","clean":"облегченный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"ободрЁнный","clean":"ободренный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"обострЁнный","clean":"обостренный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"отключЁнный","clean":"отключенный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"повторЁнный","clean":"повторенный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"поделЁнный","clean":"поделенный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"приручЁнный","clean":"прирученный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"углублЁнный","clean":"углубленный","stress":5,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"занятА","clean":"занята","stress":5,"vowels":[1,3,5,6],"category":"причастия"},{"word":"принятА","clean":"принята","stress":5,"vowels":[1,3,5,6],"category":"причастия"},{"word":"снятА","clean":"снята","stress":4,"vowels":[1,3,4,6],"category":"причастия"},{"word":"заселенА","clean":"заселена","stress":5,"vowels":[1,3,5,6,8],"category":"причастия"},{"word":"кормЯщий","clean":"кормящий","stress":4,"vowels":[1,3,4,6,8],"category":"причастия"},{"word":"кровоточАщий","clean":"кровоточащий","stress":7,"vowels":[1,3,5,7,9,11],"category":"причастия"},{"word":"балОванный","clean":"балованный","stress":3,"vowels":[1,3,5,7,9],"category":"причастия"},{"word":"избалОванный","clean":"избалованный","stress":4,"vowels":[1,3,4,6,8,10],"category":"причастия"},{"word":"начАв","clean":"начав","stress":3,"vowels":[1,3,5],"category":"деепричастия"},{"word":"начАвшись","clean":"начавшись","stress":3,"vowels":[1,3,5,7],"category":"деепричастия"},{"word":"отдАв","clean":"отдав","stress":3,"vowels":[1,3,5],"category":"деепричастия"},{"word":"поднЯв","clean":"подняв","stress":4,"vowels":[1,3,4,6],"category":"деепричастия"},{"word":"понЯв","clean":"поняв","stress":3,"vowels":[1,3,5],"category":"деепричастия"},{"word":"прибЫв","clean":"прибыв","stress":4,"vowels":[1,3,4,6],"category":"деепричастия"},{"word":"создАв","clean":"создав","stress":4,"vowels":[1,3,4,6],"category":"деепричастия"},{"word":"закУпорив","clean":"закупорив","stress":3,"vowels":[1,3,5,7],"category":"деепричастия"},{"word":"вОвремя","clean":"вовремя","stress":0,"vowels":[0,2,4,6],"category":"наречия"},{"word":"дОверху","clean":"доверху","stress":0,"vowels":[0,2,4,6],"category":"наречия"},{"word":"дОнизу","clean":"донизу","stress":0,"vowels":[0,2,4],"category":"наречия"},{"word":"дОсуха","clean":"досуха","stress":0,"vowels":[0,2,4],"category":"наречия"},{"word":"зАсветло","clean":"засветло","stress":0,"vowels":[0,2,4,6],"category":"наречия"},{"word":"зАтемно","clean":"затемно","stress":0,"vowels":[0,2,4,6],"category":"наречия"},{"word":"красИвее","clean":"красивее","stress":4,"vowels":[1,3,4,6,8],"category":"наречия"},{"word":"надОлго","clean":"надолго","stress":3,"vowels":[1,3,5],"category":"наречия"},{"word":"ненадОлго","clean":"ненадолго","stress":5,"vowels":[1,3,5,7],"category":"наречия"},{"word":"донЕльзя","clean":"донельзя","stress":3,"vowels":[1,3,5],"category":"наречия"},{"word":"завИдно","clean":"завидно","stress":3,"vowels":[1,3,5],"category":"наречия"}];
+
+  const categories = [...new Set(wordsData.map(w => w.category))];
+  let currentFilter = 'all';
+
+  let trainQueue = [], trainIndex = 0, trainAnswered = false;
+  let testQueue = [], testIndex = 0, testScore = 0, testAnswered = false;
+
+  function loadStats() {
+    try { return JSON.parse(localStorage.getItem('ege4_stats') || '{"total":0,"correct":0,"tests":0,"mistakes":{}}'); }
+    catch(e) { return {total:0,correct:0,tests:0,mistakes:{}}; }
+  }
+  function saveStats(s) { localStorage.setItem('ege4_stats', JSON.stringify(s)); }
+  function recordAnswer(wordClean, isCorrect) {
+    const s = loadStats();
+    s.total++;
+    if (isCorrect) s.correct++;
+    else s.mistakes[wordClean] = (s.mistakes[wordClean] || 0) + 1;
+    saveStats(s);
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.ege-screen').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  window.goHome = () => showScreen('screenHome');
+  window.goTrain = () => { initTrain(); showScreen('screenTrain'); };
+  window.goTest = () => { initTest(); showScreen('screenTest'); };
+  window.goDict = () => { renderDict(); showScreen('screenDict'); };
+  window.goStats = () => { renderStats(); showScreen('screenStats'); };
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function renderWordBox(containerId, catId, w, clickHandler) {
+    document.getElementById(catId).textContent = w.category;
+    const box = document.getElementById(containerId);
+    box.innerHTML = '';
+    for (let i = 0; i < w.clean.length; i++) {
+      const ch = w.clean[i];
+      const span = document.createElement('span');
+      span.className = 'ege-char';
+      span.textContent = ch;
+      if ('аеёиоуыэюя'.includes(ch)) {
+        span.classList.add('vowel');
+        span.onclick = () => clickHandler(i, w);
+      }
+      box.appendChild(span);
+    }
+  }
+
+  function showFeedback(id, isCorrect, correctWord) {
+    const fb = document.getElementById(id);
+    fb.textContent = isCorrect ? '✓ Верно!' : '✗ Неверно. Правильно: ' + correctWord;
+    fb.className = 'ege-feedback show ' + (isCorrect ? 'ok' : 'err');
+  }
+
+  function markChars(containerId, stressIdx, chosenIdx) {
+    const chars = document.getElementById(containerId).children;
+    for (let i = 0; i < chars.length; i++) {
+      if (!chars[i].classList.contains('vowel')) continue;
+      chars[i].classList.remove('selected','correct','wrong','dim');
+      if (i === stressIdx) chars[i].classList.add('correct');
+      else if (i === chosenIdx && chosenIdx !== stressIdx) chars[i].classList.add('wrong');
+      else chars[i].classList.add('dim');
+    }
+  }
+
+  // TRAINING
+  function initTrain() {
+    trainQueue = shuffle(wordsData);
+    trainIndex = 0;
+    trainAnswered = false;
+    renderTrain();
+  }
+  function renderTrain() {
+    const w = trainQueue[trainIndex];
+    document.getElementById('trainCounter').textContent = (trainIndex + 1) + '/' + trainQueue.length;
+    document.getElementById('trainProgress').style.width = ((trainIndex / trainQueue.length) * 100) + '%';
+    document.getElementById('trainFeedback').className = 'ege-feedback';
+    document.getElementById('trainNextBtn').style.display = 'none';
+    trainAnswered = false;
+    renderWordBox('trainWord', 'trainCat', w, handleTrainClick);
+  }
+  function handleTrainClick(idx, w) {
+    if (trainAnswered) return;
+    trainAnswered = true;
+    const isCorrect = idx === w.stress;
+    recordAnswer(w.clean, isCorrect);
+    markChars('trainWord', w.stress, idx);
+    showFeedback('trainFeedback', isCorrect, w.word);
+    document.getElementById('trainNextBtn').style.display = 'block';
+  }
+  window.nextTrain = () => {
+    trainIndex++;
+    if (trainIndex >= trainQueue.length) trainIndex = 0;
+    renderTrain();
+  };
+
+  // TEST
+  function initTest() {
+    testQueue = shuffle(wordsData).slice(0, 10);
+    testIndex = 0;
+    testScore = 0;
+    testAnswered = false;
+    renderTest();
+  }
+  function renderTest() {
+    const w = testQueue[testIndex];
+    document.getElementById('testCounter').textContent = (testIndex + 1) + '/10';
+    document.getElementById('testProgress').style.width = ((testIndex / 10) * 100) + '%';
+    document.getElementById('testFeedback').className = 'ege-feedback';
+    document.getElementById('testNextBtn').style.display = 'none';
+    testAnswered = false;
+    renderWordBox('testWord', 'testCat', w, handleTestClick);
+  }
+  function handleTestClick(idx, w) {
+    if (testAnswered) return;
+    testAnswered = true;
+    const isCorrect = idx === w.stress;
+    if (isCorrect) testScore++;
+    recordAnswer(w.clean, isCorrect);
+    markChars('testWord', w.stress, idx);
+    showFeedback('testFeedback', isCorrect, w.word);
+    document.getElementById('testNextBtn').style.display = 'block';
+  }
+  window.nextTest = () => {
+    testIndex++;
+    if (testIndex >= testQueue.length) {
+      const s = loadStats(); s.tests++; saveStats(s);
+      document.getElementById('resultScore').textContent = testScore;
+      document.getElementById('resultCorrect').textContent = testScore;
+      document.getElementById('resultWrong').textContent = 10 - testScore;
+      showScreen('screenResult');
+    } else {
+      renderTest();
+    }
+  };
+
+  // DICTIONARY
+  function renderDict() {
+    const search = document.getElementById('dictSearch').value.toLowerCase().trim();
+    const filterWrap = document.getElementById('dictFilters');
+    if (!filterWrap.children.length) {
+      const allBtn = document.createElement('button');
+      allBtn.className = 'ege-filter active';
+      allBtn.textContent = 'Все';
+      allBtn.onclick = () => { currentFilter = 'all'; updateFilterUI(); renderDict(); };
+      filterWrap.appendChild(allBtn);
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'ege-filter';
+        btn.textContent = cat;
+        btn.onclick = () => { currentFilter = cat; updateFilterUI(); renderDict(); };
+        filterWrap.appendChild(btn);
+      });
+    }
+    const list = document.getElementById('dictList');
+    list.innerHTML = '';
+    let filtered = wordsData;
+    if (currentFilter !== 'all') filtered = filtered.filter(w => w.category === currentFilter);
+    if (search) filtered = filtered.filter(w => w.clean.includes(search));
+    if (!filtered.length) { list.innerHTML = '<div class="ege-dict-empty">Ничего не найдено</div>'; return; }
+    filtered.forEach(w => {
+      const item = document.createElement('div');
+      item.className = 'ege-dict-item';
+      const wordHtml = w.clean.split('').map((ch, i) => i === w.stress ? '<span class="stress">' + ch + '</span>' : ch).join('');
+      item.innerHTML = '<div class="ege-dict-word">' + wordHtml + '</div><div class="ege-dict-cat">' + w.category + '</div>';
+      list.appendChild(item);
+    });
+  }
+  function updateFilterUI() {
+    document.querySelectorAll('.ege-filter').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === (currentFilter === 'all' ? 'Все' : currentFilter));
+    });
+  }
+
+  // STATS
+  function renderStats() {
+    const s = loadStats();
+    document.getElementById('statTotal').textContent = s.total;
+    document.getElementById('statCorrect').textContent = s.correct;
+    document.getElementById('statAccuracy').textContent = s.total ? Math.round((s.correct / s.total) * 100) + '%' : '0%';
+    document.getElementById('statTests').textContent = s.tests;
+    const list = document.getElementById('mistakesList');
+    list.innerHTML = '';
+    const mistakesArr = Object.entries(s.mistakes).sort((a, b) => b[1] - a[1]);
+    if (!mistakesArr.length) { list.innerHTML = '<div class="ege-empty-state">Пока нет ошибок — так держать!</div>'; return; }
+    mistakesArr.forEach(([word, count]) => {
+      const w = wordsData.find(x => x.clean === word);
+      const item = document.createElement('div');
+      item.className = 'ege-mistake-item';
+      item.innerHTML = '<div class="ege-mistake-word">' + (w ? w.word : word) + '</div><div class="ege-mistake-count">' + count + ' ошиб' + (count === 1 ? 'ка' : count < 5 ? 'ки' : 'ок') + '</div>';
+      list.appendChild(item);
+    });
+  }
+})();
+</script>
+</body>
+</html>

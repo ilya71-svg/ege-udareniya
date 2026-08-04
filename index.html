@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ЕГЭ — Задание 4 (Ударения)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -12,6 +12,7 @@
     color: #111;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
   }
   @media (prefers-color-scheme: dark) {
     body { background: #0d0d0d; color: #f5f5f7; }
@@ -20,8 +21,18 @@
     .ege-card-desc, .ege-dict-cat, .ege-mistake-count, .ege-result-label, .ege-progress-text, .ege-empty-state, .ege-dict-empty { color: #888; }
     .ege-category-tag, .ege-stat-box .lbl { background: #222; color: #888; }
     .ege-back:hover, .ege-card:hover, .ege-dict-item:hover, .ege-filter:hover { background: #222; }
+    .ege-char.vowel:hover { background: #222; border-color: #444; }
+    .ege-char.vowel.selected { background: #e0e0e0; color: #111; border-color: #e0e0e0; }
+    .ege-char.vowel.dim { opacity: 0.5; }
+    .ege-btn.primary { background: #f5f5f7; color: #111; border-color: #f5f5f7; }
+    .ege-btn.primary:hover { background: #e0e0e0; opacity: 1; }
+    .ege-progress-fill { background: #f5f5f7; }
+    .ege-filter.active { background: #f5f5f7; color: #111; border-color: #f5f5f7; }
+    .ege-filter:hover { border-color: #f5f5f7; color: #f5f5f7; }
+    .ege-feedback.ok { background: rgba(46,125,50,0.25); }
+    .ege-feedback.err { background: rgba(198,40,40,0.25); }
   }
-  .ege-app { max-width: 520px; margin: 0 auto; padding: 16px; min-height: 100vh; }
+  .ege-app { max-width: 520px; margin: 0 auto; padding: 16px; min-height: 100dvh; }
   .ege-app button, .ege-app input { font: inherit; }
   .ege-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 8px; }
   .ege-header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0; flex: 1; text-align: center; }
@@ -39,10 +50,9 @@
   .ege-card-desc { font-size: 12px; color: #888; line-height: 1.4; }
   .ege-word-box { background: #fff; border-radius: 14px; padding: 36px 20px; text-align: center; margin-bottom: 20px; border: 1px solid #e0e0e0; }
   .ege-word { font-size: 34px; font-weight: 600; line-height: 1.4; letter-spacing: 0.02em; display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
-  .ege-char { display: inline-block; padding: 3px 5px; border-radius: 8px; transition: all .15s; cursor: default; min-width: 22px; text-align: center; }
-  .ege-char.vowel { cursor: pointer; border: 2px solid transparent; }
+  .ege-char { display: inline-block; padding: 4px 6px; border-radius: 8px; transition: all .15s; cursor: default; min-width: 24px; text-align: center; color: inherit; }
+  .ege-char.vowel { cursor: pointer; border: 2px solid transparent; touch-action: manipulation; }
   .ege-char.vowel:hover { background: #f0f0f0; border-color: #ccc; }
-  @media (prefers-color-scheme: dark) { .ege-char.vowel:hover { background: #222; border-color: #444; } }
   .ege-char.vowel.selected { background: #111; color: #fff; border-color: #111; }
   .ege-char.vowel.correct { background: #2e7d32; color: #fff; border-color: #2e7d32; }
   .ege-char.vowel.wrong { background: #c62828; color: #fff; border-color: #c62828; }
@@ -52,8 +62,7 @@
   .ege-feedback.show { opacity: 1; transform: translateY(0); }
   .ege-feedback.ok { background: #e8f5e9; color: #2e7d32; }
   .ege-feedback.err { background: #ffebee; color: #c62828; }
-  @media (prefers-color-scheme: dark) { .ege-feedback.ok { background: rgba(46,125,50,0.15); } .ege-feedback.err { background: rgba(198,40,40,0.15); } }
-  .ege-btn { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; color: #111; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; margin-bottom: 8px; }
+  .ege-btn { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; color: #111; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; margin-bottom: 8px; touch-action: manipulation; }
   .ege-btn:hover { background: #f5f5f5; }
   .ege-btn.primary { background: #111; color: #fff; border-color: #111; }
   .ege-btn.primary:hover { opacity: 0.85; }
@@ -71,7 +80,7 @@
   .ege-search { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; color: #111; font-size: 15px; margin-bottom: 12px; outline: none; }
   .ege-search:focus { border-color: #111; }
   .ege-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-  .ege-filter { padding: 6px 14px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; color: #666; font-size: 12px; cursor: pointer; transition: all .15s; font-weight: 500; }
+  .ege-filter { padding: 6px 14px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; color: #666; font-size: 12px; cursor: pointer; transition: all .15s; font-weight: 500; touch-action: manipulation; }
   .ege-filter:hover { border-color: #111; color: #111; }
   .ege-filter.active { background: #111; color: #fff; border-color: #111; }
   .ege-dict-list { display: flex; flex-direction: column; gap: 6px; max-height: 480px; overflow-y: auto; padding-right: 4px; }
